@@ -1,0 +1,236 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Berechnen Sie Ihren persönlichen Countdown zum Renteneintritt. Erfahren Sie, wie lange es noch bis zu Ihrer Rente dauert und informieren Sie sich über wichtige Aspekte der Altersvorsorge.">
+    <meta name="keywords" content="Rentencountdown, Renteneintritt, Rentenalter, Altersvorsorge, Rente berechnen, Countdown zur Rente, Ruhestand">
+    <meta name="author" content="RentenCountdown">
+    <meta property="og:title" content="Rentencountdown - Ihr Weg zum Ruhestand">
+    <meta property="og:description" content="Personalisierter Countdown bis zu Ihrer Rente. Jetzt Renteneintritt berechnen und über Altersvorsorge informieren.">
+    <meta property="og:type" content="website">
+    <title>RentenCountdown - Ihr persönlicher Countdown zum Ruhestand</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div class="container">
+        <h1>RentenCountdown</h1>
+        
+        <div class="form-container hidden" id="birthdayForm">
+            <div class="form-header">
+                <h3>Geburtsdatum eingeben</h3>
+                <button class="close-button" onclick="hideDatePicker()">×</button>
+            </div>
+            <input type="date" id="birthday" required>
+            <button onclick="setBirthday()">Countdown starten</button>
+        </div>
+
+        <div id="countdown" class="countdown">
+            <div class="countdown-item">
+                <div class="number" id="years">0</div>
+                <div class="label">Jahre</div>
+            </div>
+            <div class="countdown-item">
+                <div class="number" id="months">0</div>
+                <div class="label">Monate</div>
+            </div>
+            <div class="countdown-item">
+                <div class="number" id="days">0</div>
+                <div class="label">Tage</div>
+            </div>
+            <div class="countdown-item">
+                <div class="number" id="hours">0</div>
+                <div class="label">Stunden</div>
+            </div>
+            <div class="countdown-item">
+                <div class="number" id="seconds">0</div>
+                <div class="label">Sekunden</div>
+            </div>
+        </div>
+        <div class="retirement-date-container">
+            <span class="retirement-date" id="retirementDate"></span>
+            <button class="edit-button" onclick="showDatePicker()">ändern</button>
+        </div>
+    </div>
+
+    <div class="bottom-buttons">
+        <button class="action-button" onclick="sharePage()">
+            🔗 Teilen
+        </button>
+        <button class="action-button" onclick="addToHomescreen()">
+            📱 Als Startseite
+        </button>
+        <button class="action-button" onclick="toggleInfo()">
+            ℹ️ Mehr Infos
+        </button>
+    </div>
+
+    <nav class="navigation">
+        <a href="#" onclick="alert('Impressum wird geladen...')">Impressum</a>
+        <a href="#" onclick="alert('Datenschutz wird geladen...')">Datenschutz</a>
+    </nav>
+
+        <div class="info-panel" id="infoPanel">
+        <div class="info-panel-header">
+            <h2>Informationen zur Rente</h2>
+            <button class="close-button" onclick="toggleInfo()" title="Schließen">×</button>
+        </div>
+        <div class="info-content">
+            <h3>Der Weg in den Ruhestand</h3>
+            <p>Der Rentencountdown ist Ihr persönlicher Begleiter auf dem Weg zum wohlverdienten Ruhestand. Mit unserem innovativen Tool können Sie genau verfolgen, wie viel Zeit noch bis zu Ihrem Renteneintritt verbleibt.</p>
+
+            <h3>Das Renteneintrittsalter in Deutschland</h3>
+            <p>Das gesetzliche Renteneintrittsalter liegt aktuell bei 67 Jahren. Diese Regelung wurde schrittweise eingeführt, um dem demografischen Wandel und der steigenden Lebenserwartung gerecht zu werden.</p>
+
+            <h3>Wichtige Fakten zur Altersvorsorge</h3>
+            <p>Die gesetzliche Rente ist nur eine Säule der Altersvorsorge. Experten empfehlen eine Kombination aus:</p>
+            <ul>
+                <li>Gesetzlicher Rentenversicherung</li>
+                <li>Betrieblicher Altersvorsorge</li>
+                <li>Privater Vorsorge (z.B. Riester-Rente oder private Rentenversicherung)</li>
+            </ul>
+
+            <h3>Über unseren Countdown</h3>
+            <p>Der Rentencountdown berechnet präzise die verbleibende Zeit bis zu Ihrem persönlichen Renteneintritt. Er berücksichtigt dabei:</p>
+            <ul>
+                <li>Jahre, Monate, Tage, Stunden und Sekunden</li>
+                <li>Ihr individuelles Geburtsdatum</li>
+                <li>Das aktuelle gesetzliche Renteneintrittsalter</li>
+            </ul>
+        </div>
+    </div>
+
+<script>
+        // Initialize based on URL parameters or stored date
+        function init() {
+            const urlParams = new URLSearchParams(window.location.search);
+            const urlDate = urlParams.get('birth');
+            
+            if (urlDate) {
+                const formattedDate = new Date(urlDate).toISOString().split('T')[0];
+                document.getElementById('birthday').value = formattedDate;
+                setBirthday();
+            } else {
+                const storedBirthday = localStorage.getItem('birthday');
+                if (storedBirthday) {
+                    document.getElementById('birthday').value = storedBirthday;
+                    startCountdown(storedBirthday);
+                } else {
+                    showDatePicker();
+                }
+            }
+        }
+
+        function setBirthday() {
+            const birthday = document.getElementById('birthday').value;
+            if (birthday) {
+                localStorage.setItem('birthday', birthday);
+                hideDatePicker();
+                startCountdown(birthday);
+            }
+        }
+
+        function showDatePicker() {
+            document.getElementById('birthdayForm').classList.remove('hidden');
+        }
+
+        function hideDatePicker() {
+            document.getElementById('birthdayForm').classList.add('hidden');
+        }
+
+        function toggleInfo() {
+            document.getElementById('infoPanel').classList.toggle('active');
+        }
+
+        function sharePage() {
+            const birthday = localStorage.getItem('birthday');
+            if (birthday) {
+                const shareUrl = `${window.location.origin}${window.location.pathname}?birth=${birthday}`;
+                if (navigator.share) {
+                    navigator.share({
+                        title: 'Mein Rentencountdown',
+                        text: 'Schau dir meinen persönlichen Rentencountdown an!',
+                        url: shareUrl
+                    }).catch(console.error);
+                } else {
+                    navigator.clipboard.writeText(shareUrl).then(() => {
+                        alert('Link wurde in die Zwischenablage kopiert!');
+                    }).catch(console.error);
+                }
+            }
+        }
+
+        function addToHomescreen() {
+            if (window.matchMedia('(display-mode: standalone)').matches) {
+                alert('Die Webseite ist bereits als App installiert!');
+                return;
+            }
+
+            if (window.navigator.standalone === true) {
+                alert('Die Webseite ist bereits zum Homescreen hinzugefügt!');
+                return;
+            }
+
+            if (/iPhone|iPad|iPod/.test(navigator.userAgent)) {
+                alert('Um die Seite zum Homescreen hinzuzufügen:\n1. Tippen Sie auf das Teilen-Symbol\n2. Wählen Sie "Zum Home-Bildschirm"');
+            } else if (/Android/.test(navigator.userAgent)) {
+                alert('Um die Seite zum Homescreen hinzuzufügen:\n1. Tippen Sie auf die drei Punkte (⋮)\n2. Wählen Sie "Zum Startbildschirm hinzufügen"');
+            } else {
+                alert('Fügen Sie diese Seite zu Ihren Lesezeichen hinzu:\n' + 
+                      (navigator.userAgent.toLowerCase().indexOf('mac') != -1 ? 'Command (⌘)' : 'Strg') + 
+                      ' + D');
+            }
+        }
+
+        function startCountdown(birthday) {
+            document.getElementById('countdown').style.display = 'flex';
+            
+            const birthDate = new Date(birthday);
+            const retirementDate = new Date(birthDate);
+            retirementDate.setFullYear(birthDate.getFullYear() + 67);
+            
+            const options = { 
+                day: '2-digit', 
+                month: '2-digit', 
+                year: 'numeric' 
+            };
+            document.getElementById('retirementDate').textContent = 
+                `Renteneintritt am: ${retirementDate.toLocaleDateString('de-DE', options)}`;
+
+            function updateCountdown() {
+                const now = new Date();
+                const difference = retirementDate - now;
+
+                if (difference > 0) {
+                    const years = Math.floor(difference / (1000 * 60 * 60 * 24 * 365));
+                    const months = Math.floor((difference % (1000 * 60 * 60 * 24 * 365)) / (1000 * 60 * 60 * 24 * 30));
+                    const days = Math.floor((difference % (1000 * 60 * 60 * 24 * 30)) / (1000 * 60 * 60 * 24));
+                    const hours = Math.floor((difference % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+                    const seconds = Math.floor((difference % (1000 * 60)) / 1000);
+
+                    document.getElementById('years').textContent = years;
+                    document.getElementById('months').textContent = months;
+                    document.getElementById('days').textContent = days;
+                    document.getElementById('hours').textContent = hours;
+                    document.getElementById('seconds').textContent = seconds;
+                } else {
+                    document.getElementById('countdown').innerHTML = '<h2>Sie sind bereits im Ruhestand! 🎉</h2>';
+                }
+            }
+
+            updateCountdown();
+            setInterval(updateCountdown, 1000);
+        }
+
+        // Add service worker for PWA support
+        if ('serviceWorker' in navigator) {
+            navigator.serviceWorker.register('/sw.js').catch(function(err) {
+                console.log('ServiceWorker registration failed: ', err);
+            });
+        }
+
+        // Initialize the app
+        init();
+    </script>
+</body>
+</html>
