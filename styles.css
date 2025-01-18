@@ -14,7 +14,7 @@ body {
     text-align: center;
     padding: 20px;
     background: linear-gradient(rgba(0, 26, 46, 0.25), rgba(22, 33, 62, 0.25)),
-                url('./beach1.jpg') center/cover no-repeat fixed;
+                url('./beach2.jpg') center/cover no-repeat fixed;
 }
 
 .container {
