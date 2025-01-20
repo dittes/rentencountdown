@@ -6,15 +6,19 @@
     <meta name="description" content="Berechnen Sie Ihren persönlichen Countdown zum Renteneintritt. Erfahren Sie, wie lange es noch bis zu Ihrer Rente dauert und informieren Sie sich über wichtige Aspekte der Altersvorsorge.">
     <meta name="keywords" content="Rentencountdown, Renteneintritt, Rentenalter, Altersvorsorge, Rente berechnen, Countdown zur Rente, Ruhestand">
     <meta name="author" content="RentenCountdown">
-    <meta property="og:title" content="Rentencountdown - Ihr Weg zum Ruhestand">
+    <meta property="og:title" content="Rentencountdown ⏰ - Ihr Weg zum Ruhestand">
     <meta property="og:description" content="Personalisierter Countdown bis zu Ihrer Rente. Jetzt Renteneintritt berechnen und über Altersvorsorge informieren.">
     <meta property="og:type" content="website">
-    <title>RentenCountdown ⏰ - Ihr persönlicher Countdown zum Ruhestand</title>
+    <title>Rentencountdown ⏰ - Ihr persönlicher Countdown zum Ruhestand</title>
     <link rel="stylesheet" href="styles.css">
 </head>
 <body>
+    <div class="background-switcher">
+        <button onclick="switchBackground()">🖼️ Hintergrund</button>
+    </div>
+
     <div class="container">
-        <h1>RentenCountdown ⏰</h1>
+        <h1>Rentencountdown ⏰</h1>
         
         <div class="form-container hidden" id="birthdayForm">
             <div class="form-header">
@@ -66,17 +70,15 @@
     </div>
 
     <nav class="navigation">
-        <a href="https://dittes.info/contact/" onclick="alert('Impressum wird geladen...')">Impressum</a>
-        <a href="https://dittes.info/privacy-policy/">Datenschutz</a>
+        <a href="https://dittes.info/contact/" target="_blank">Impressum</a>
     </nav>
 
-        <div class="info-panel" id="infoPanel">
+    <div class="info-panel" id="infoPanel">
         <div class="info-panel-header">
             <h2>Informationen zur Rente</h2>
             <button class="close-button" onclick="toggleInfo()" title="Schließen">×</button>
         </div>
         <div class="info-content">
-            <button class="action-button" onclick="toggleInfo()">Info schließen</button>
             <h3>Der Weg in den Ruhestand</h3>
             <p>Der Rentencountdown ist Ihr persönlicher Begleiter auf dem Weg zum wohlverdienten Ruhestand. Mit unserem innovativen Tool können Sie genau verfolgen, wie viel Zeit noch bis zu Ihrem Renteneintritt verbleibt.</p>
 
@@ -98,37 +100,43 @@
                 <li>Ihr individuelles Geburtsdatum</li>
                 <li>Das aktuelle gesetzliche Renteneintrittsalter</li>
             </ul>
-            <button class="action-button" onclick="toggleInfo()">Info schließen</button>
         </div>
     </div>
 
-<script>
-        // Initialize based on URL parameters or stored date
-        function init() {
-            const urlParams = new URLSearchParams(window.location.search);
-            const urlDate = urlParams.get('birth');
-            
-            if (urlDate) {
-                const formattedDate = new Date(urlDate).toISOString().split('T')[0];
-                document.getElementById('birthday').value = formattedDate;
-                setBirthday();
-            } else {
-                const storedBirthday = localStorage.getItem('birthday');
-                if (storedBirthday) {
-                    document.getElementById('birthday').value = storedBirthday;
-                    startCountdown(storedBirthday);
-                } else {
-                    showDatePicker();
-                }
+    <script>
+        const backgrounds = [
+            'beach1.jpg',
+            'beach2.jpg',
+            'https://images.unsplash.com/photo-1499363536502-87642509e31b?ixlib=rb-4.0.3&auto=format&fit=crop&w=2070&q=80',
+            'https://images.unsplash.com/photo-1508615039623-a25605d2b022?ixlib=rb-4.0.3&auto=format&fit=crop&w=2070&q=80'
+        ];
+
+        function initBackground() {
+            const savedBg = localStorage.getItem('selectedBackground');
+            if (savedBg) {
+                document.body.style.backgroundImage = `linear-gradient(rgba(26, 26, 46, 0.85), rgba(22, 33, 62, 0.85)), url('${savedBg}')`;
             }
         }
 
-        function setBirthday() {
-            const birthday = document.getElementById('birthday').value;
-            if (birthday) {
-                localStorage.setItem('birthday', birthday);
-                hideDatePicker();
-                startCountdown(birthday);
+        function switchBackground() {
+            const currentBg = localStorage.getItem('selectedBackground') || backgrounds[0];
+            let currentIndex = backgrounds.indexOf(currentBg);
+            currentIndex = (currentIndex + 1) % backgrounds.length;
+            const newBg = backgrounds[currentIndex];
+            
+            document.body.style.backgroundImage = `linear-gradient(rgba(26, 26, 46, 0.85), rgba(22, 33, 62, 0.85)), url('${newBg}')`;
+            localStorage.setItem('selectedBackground', newBg);
+        }
+
+        function toggleInfo() {
+            const infoPanel = document.getElementById('infoPanel');
+            infoPanel.classList.toggle('active');
+            
+            const bottomButtons = document.querySelector('.bottom-buttons');
+            if (infoPanel.classList.contains('active')) {
+                bottomButtons.style.bottom = `${infoPanel.clientHeight + 20}px`;
+            } else {
+                bottomButtons.style.bottom = '20px';
             }
         }
 
@@ -140,8 +148,13 @@
             document.getElementById('birthdayForm').classList.add('hidden');
         }
 
-        function toggleInfo() {
-            document.getElementById('infoPanel').classList.toggle('active');
+        function setBirthday() {
+            const birthday = document.getElementById('birthday').value;
+            if (birthday) {
+                localStorage.setItem('birthday', birthday);
+                hideDatePicker();
+                startCountdown(birthday);
+            }
         }
 
         function sharePage() {
@@ -151,7 +164,7 @@
                 if (navigator.share) {
                     navigator.share({
                         title: 'Mein Rentencountdown',
-                        text: 'Schau dir meinen persönlichen Rentencountdown an!',
+                        text: 'Schau dir meinen Rentencountdown an!',
                         url: shareUrl
                     }).catch(console.error);
                 } else {
@@ -224,14 +237,28 @@
             setInterval(updateCountdown, 1000);
         }
 
-        // Add service worker for PWA support
-        if ('serviceWorker' in navigator) {
-            navigator.serviceWorker.register('/sw.js').catch(function(err) {
-                console.log('ServiceWorker registration failed: ', err);
-            });
+        // Initialize the app
+        function init() {
+            initBackground();
+            
+            const urlParams = new URLSearchParams(window.location.search);
+            const urlDate = urlParams.get('birth');
+            
+            if (urlDate) {
+                const formattedDate = new Date(urlDate).toISOString().split('T')[0];
+                document.getElementById('birthday').value = formattedDate;
+                setBirthday();
+            } else {
+                const storedBirthday = localStorage.getItem('birthday');
+                if (storedBirthday) {
+                    document.getElementById('birthday').value = storedBirthday;
+                    startCountdown(storedBirthday);
+                } else {
+                    showDatePicker();
+                }
+            }
         }
 
-        // Initialize the app
         init();
     </script>
 </body>
