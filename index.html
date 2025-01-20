@@ -6,19 +6,15 @@
     <meta name="description" content="Berechnen Sie Ihren persönlichen Countdown zum Renteneintritt. Erfahren Sie, wie lange es noch bis zu Ihrer Rente dauert und informieren Sie sich über wichtige Aspekte der Altersvorsorge.">
     <meta name="keywords" content="Rentencountdown, Renteneintritt, Rentenalter, Altersvorsorge, Rente berechnen, Countdown zur Rente, Ruhestand">
     <meta name="author" content="RentenCountdown">
-    <meta property="og:title" content="Rentencountdown ⏰ - Ihr Weg zum Ruhestand">
+    <meta property="og:title" content="⏰ Rentencountdown - Ihr Weg zum Ruhestand">
     <meta property="og:description" content="Personalisierter Countdown bis zu Ihrer Rente. Jetzt Renteneintritt berechnen und über Altersvorsorge informieren.">
     <meta property="og:type" content="website">
-    <title>Rentencountdown ⏰ - Ihr persönlicher Countdown zum Ruhestand</title>
+    <title>⏰ Rentencountdown - Ihr persönlicher Countdown zum Ruhestand</title>
     <link rel="stylesheet" href="styles.css">
 </head>
 <body>
-    <div class="background-switcher">
-        <button onclick="switchBackground()">🖼️ Hintergrund</button>
-    </div>
-
     <div class="container">
-        <h1>Rentencountdown ⏰</h1>
+        <h1>⏰ Rentencountdown</h1>
         
         <div class="form-container hidden" id="birthdayForm">
             <div class="form-header">
@@ -53,7 +49,6 @@
         </div>
         <div class="retirement-date-container">
             <span class="retirement-date" id="retirementDate"></span>
-            <button class="edit-button" onclick="showDatePicker()">ändern</button>
         </div>
     </div>
 
@@ -61,8 +56,8 @@
         <button class="action-button" onclick="sharePage()">
             🔗 Teilen
         </button>
-        <button class="action-button" onclick="addToHomescreen()">
-            📱 Als Startseite
+        <button class="action-button" onclick="toggleSettings()">
+            ⚙️ Einstellungen
         </button>
         <button class="action-button" onclick="toggleInfo()">
             ℹ️ Mehr Infos
@@ -72,6 +67,33 @@
     <nav class="navigation">
         <a href="https://dittes.info/contact/" target="_blank">Impressum</a>
     </nav>
+
+    <div class="settings-panel" id="settingsPanel">
+        <div class="settings-panel-header">
+            <h2>Einstellungen</h2>
+            <button class="close-button" onclick="toggleSettings()" title="Schließen">×</button>
+        </div>
+        <div class="settings-content">
+            <div class="settings-group">
+                <h3>Persönliche Einstellungen</h3>
+                <button class="settings-button" onclick="showDatePicker()">
+                    📅 Datum ändern
+                </button>
+                <button class="settings-button" onclick="addToHomescreen()">
+                    📱 Als Startseite hinzufügen
+                </button>
+            </div>
+            <div class="settings-group">
+                <h3>Design</h3>
+                <select class="background-select" onchange="selectBackground(this.value)">
+                    <option value="0">Hintergrund 1 - Berge</option>
+                    <option value="1">Hintergrund 2 - Sonnenuntergang</option>
+                    <option value="2">Hintergrund 3 - Meer</option>
+                    <option value="3">Hintergrund 4 - Wald</option>
+                </select>
+            </div>
+        </div>
+    </div>
 
     <div class="info-panel" id="infoPanel">
         <div class="info-panel-header">
@@ -105,36 +127,62 @@
 
     <script>
         const backgrounds = [
-            'beach1.jpg',
-            'beach2.jpg',
+            'https://images.unsplash.com/photo-1509475826633-fed577a2c71b?ixlib=rb-4.0.3&auto=format&fit=crop&w=2071&q=80',
+            'https://images.unsplash.com/photo-1494783367193-149034c05e8f?ixlib=rb-4.0.3&auto=format&fit=crop&w=2070&q=80',
             'https://images.unsplash.com/photo-1499363536502-87642509e31b?ixlib=rb-4.0.3&auto=format&fit=crop&w=2070&q=80',
             'https://images.unsplash.com/photo-1508615039623-a25605d2b022?ixlib=rb-4.0.3&auto=format&fit=crop&w=2070&q=80'
         ];
 
         function initBackground() {
-            const savedBg = localStorage.getItem('selectedBackground');
-            if (savedBg) {
-                document.body.style.backgroundImage = `linear-gradient(rgba(26, 26, 46, 0.85), rgba(22, 33, 62, 0.85)), url('${savedBg}')`;
+            const savedBg = localStorage.getItem('selectedBackground') || backgrounds[0];
+            document.body.style.backgroundImage = `linear-gradient(rgba(26, 26, 46, 0.85), rgba(22, 33, 62, 0.85)), url('${savedBg}')`;
+            
+            // Set the select value
+            const index = backgrounds.indexOf(savedBg);
+            if (index !== -1) {
+                document.querySelector('.background-select').value = index;
             }
         }
 
-        function switchBackground() {
-            const currentBg = localStorage.getItem('selectedBackground') || backgrounds[0];
-            let currentIndex = backgrounds.indexOf(currentBg);
-            currentIndex = (currentIndex + 1) % backgrounds.length;
-            const newBg = backgrounds[currentIndex];
-            
+        function selectBackground(index) {
+            const newBg = backgrounds[index];
             document.body.style.backgroundImage = `linear-gradient(rgba(26, 26, 46, 0.85), rgba(22, 33, 62, 0.85)), url('${newBg}')`;
             localStorage.setItem('selectedBackground', newBg);
         }
 
         function toggleInfo() {
             const infoPanel = document.getElementById('infoPanel');
-            infoPanel.classList.toggle('active');
+            const settingsPanel = document.getElementById('settingsPanel');
             
+            if (settingsPanel.classList.contains('active')) {
+                settingsPanel.classList.remove('active');
+            }
+            
+            infoPanel.classList.toggle('active');
+            adjustBottomButtons();
+        }
+
+        function toggleSettings() {
+            const settingsPanel = document.getElementById('settingsPanel');
+            const infoPanel = document.getElementById('infoPanel');
+            
+            if (infoPanel.classList.contains('active')) {
+                infoPanel.classList.remove('active');
+            }
+            
+            settingsPanel.classList.toggle('active');
+            adjustBottomButtons();
+        }
+
+        function adjustBottomButtons() {
             const bottomButtons = document.querySelector('.bottom-buttons');
+            const infoPanel = document.getElementById('infoPanel');
+            const settingsPanel = document.getElementById('settingsPanel');
+            
             if (infoPanel.classList.contains('active')) {
                 bottomButtons.style.bottom = `${infoPanel.clientHeight + 20}px`;
+            } else if (settingsPanel.classList.contains('active')) {
+                bottomButtons.style.bottom = `${settingsPanel.clientHeight + 20}px`;
             } else {
                 bottomButtons.style.bottom = '20px';
             }
@@ -142,6 +190,7 @@
 
         function showDatePicker() {
             document.getElementById('birthdayForm').classList.remove('hidden');
+            toggleSettings(); // Close settings panel
         }
 
         function hideDatePicker() {
@@ -237,7 +286,6 @@
             setInterval(updateCountdown, 1000);
         }
 
-        // Initialize the app
         function init() {
             initBackground();
             
@@ -257,9 +305,11 @@
                     showDatePicker();
                 }
             }
+
+            // Add window resize listener for mobile adjustments
+            window.addEventListener('resize', adjustBottomButtons);
         }
 
         init();
     </script>
 </body>
-</html>
