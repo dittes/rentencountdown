@@ -121,6 +121,7 @@ button:hover {
 
 .number {
     font-weight: bold;
+    font-size: 2.5rem;
     color: var(--glow-color);
     text-shadow: 0 0 10px rgba(0, 255, 247, 0.5),
                  0 0 20px rgba(0, 255, 247, 0.3);
