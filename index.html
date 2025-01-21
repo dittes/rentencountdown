@@ -152,7 +152,7 @@
 
         function initBackground() {
             const savedBg = localStorage.getItem('selectedBackground') || backgrounds[0];
-            document.body.style.backgroundImage = `linear-gradient(rgba(26, 26, 46, 0.85), rgba(22, 33, 62, 0.85)), url('${savedBg}')`;
+            document.body.style.backgroundImage = `linear-gradient(rgba(26, 26, 46, 0.45), rgba(22, 33, 62, 0.45)), url('${savedBg}')`;
             
             // Set the select value
             const index = backgrounds.indexOf(savedBg);
@@ -163,7 +163,7 @@
 
         function selectBackground(index) {
             const newBg = backgrounds[index];
-            document.body.style.backgroundImage = `linear-gradient(rgba(26, 26, 46, 0.85), rgba(22, 33, 62, 0.85)), url('${newBg}')`;
+            document.body.style.backgroundImage = `linear-gradient(rgba(26, 26, 46, 0.45), rgba(22, 33, 62, 0.45)), url('${newBg}')`;
             localStorage.setItem('selectedBackground', newBg);
         }
 
