@@ -379,7 +379,7 @@ button:hover {
         min-width: unset;
         flex: 0 0 calc(50% - 1rem);
         margin: 0.5rem;
-        padding: 1rem;
+        padding: 0rem;
     }
 
     .info-panel {
