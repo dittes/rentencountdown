@@ -1,0 +1,204 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>2-Player Shooter</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            touch-action: none;
+        }
+
+        body {
+            overflow: hidden;
+            background: #1a1a1a;
+            font-family: Arial, sans-serif;
+        }
+
+        #gameCanvas {
+            width: 100vw;
+            height: 100vh;
+            background: linear-gradient(to bottom, #0f0f3d, #2a0a3a);
+        }
+
+        .score {
+            position: fixed;
+            padding: 10px;
+            color: white;
+            font-size: 24px;
+            z-index: 100;
+        }
+
+        #player1Score {
+            top: 10px;
+            left: 10px;
+            color: #ff4444;
+        }
+
+        #player2Score {
+            top: 10px;
+            right: 10px;
+            color: #4444ff;
+        }
+
+        .control-area {
+            position: fixed;
+            bottom: 0;
+            width: 50%;
+            height: 40%;
+            z-index: 100;
+        }
+
+        #leftControl {
+            left: 0;
+        }
+
+        #rightControl {
+            right: 0;
+        }
+    </style>
+</head>
+<body>
+    <canvas id="gameCanvas"></canvas>
+    <div id="player1Score" class="score">P1: 0</div>
+    <div id="player2Score" class="score">P2: 0</div>
+    <div id="leftControl" class="control-area"></div>
+    <div id="rightControl" class="control-area"></div>
+
+    <script>
+        const canvas = document.getElementById('gameCanvas');
+        const ctx = canvas.getContext('2d');
+        const p1ScoreElement = document.getElementById('player1Score');
+        const p2ScoreElement = document.getElementById('player2Score');
+
+        // Set canvas size
+        function resizeCanvas() {
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+        }
+        window.addEventListener('resize', resizeCanvas);
+        resizeCanvas();
+
+        // Game state
+        const state = {
+            players: [
+                {
+                    x: canvas.width * 0.25,
+                    y: canvas.height * 0.5,
+                    color: '#ff4444',
+                    score: 0,
+                    bullets: [],
+                    shooting: false
+                },
+                {
+                    x: canvas.width * 0.75,
+                    y: canvas.height * 0.5,
+                    color: '#4444ff',
+                    score: 0,
+                    bullets: [],
+                    shooting: false
+                }
+            ],
+            bulletSpeed: 8,
+            playerSize: 30,
+            bulletSize: 8
+        };
+
+        // Touch controls
+        const leftControl = document.getElementById('leftControl');
+        const rightControl = document.getElementById('rightControl');
+
+        function handleTouch(e, playerIndex) {
+            e.preventDefault();
+            const touch = e.touches[0];
+            const rect = e.target.getBoundingClientRect();
+            const relativeY = (touch.clientY - rect.top) / rect.height;
+            state.players[playerIndex].y = relativeY * canvas.height;
+            state.players[playerIndex].shooting = true;
+        }
+
+        function stopShooting(playerIndex) {
+            state.players[playerIndex].shooting = false;
+        }
+
+        leftControl.addEventListener('touchstart', (e) => handleTouch(e, 0));
+        leftControl.addEventListener('touchmove', (e) => handleTouch(e, 0));
+        leftControl.addEventListener('touchend', () => stopShooting(0));
+
+        rightControl.addEventListener('touchstart', (e) => handleTouch(e, 1));
+        rightControl.addEventListener('touchmove', (e) => handleTouch(e, 1));
+        rightControl.addEventListener('touchend', () => stopShooting(1));
+
+        // Game functions
+        function createBullet(player, direction) {
+            return {
+                x: player.x + (direction * state.playerSize),
+                y: player.y,
+                direction: direction
+            };
+        }
+
+        function updateBullets() {
+            state.players.forEach((player, index) => {
+                if (player.shooting) {
+                    const direction = index === 0 ? 1 : -1;
+                    player.bullets.push(createBullet(player, direction));
+                }
+
+                player.bullets = player.bullets.filter(bullet => {
+                    bullet.x += state.bulletSpeed * bullet.direction;
+
+                    // Check collision with opponent
+                    const opponent = state.players[1 - index];
+                    const hitOpponent = Math.abs(bullet.x - opponent.x) < state.playerSize &&
+                                      Math.abs(bullet.y - opponent.y) < state.playerSize;
+
+                    if (hitOpponent) {
+                        player.score++;
+                        updateScores();
+                        return false;
+                    }
+
+                    return bullet.x > 0 && bullet.x < canvas.width;
+                });
+            });
+        }
+
+        function updateScores() {
+            p1ScoreElement.textContent = `P1: ${state.players[0].score}`;
+            p2ScoreElement.textContent = `P2: ${state.players[1].score}`;
+        }
+
+        function draw() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+            // Draw players
+            state.players.forEach(player => {
+                ctx.fillStyle = player.color;
+                ctx.beginPath();
+                ctx.arc(player.x, player.y, state.playerSize, 0, Math.PI * 2);
+                ctx.fill();
+
+                // Draw bullets
+                ctx.fillStyle = player.color + '88';
+                player.bullets.forEach(bullet => {
+                    ctx.beginPath();
+                    ctx.arc(bullet.x, bullet.y, state.bulletSize, 0, Math.PI * 2);
+                    ctx.fill();
+                });
+            });
+        }
+
+        function gameLoop() {
+            updateBullets();
+            draw();
+            requestAnimationFrame(gameLoop);
+        }
+
+        gameLoop();
+    </script>
+</body>
+</html>
