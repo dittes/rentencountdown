@@ -1,0 +1,269 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Der Schreiende Baum</title>
+    <style>
+        body {
+            margin: 0;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            background: linear-gradient(to bottom, #87CEEB, #ADD8E6);
+            font-family: 'Arial', sans-serif;
+            overflow: hidden;
+        }
+
+        .container {
+            text-align: center;
+            width: 100%;
+            max-width: 800px;
+            padding: 20px;
+        }
+
+        h1 {
+            color: #2C4A1B;
+            margin: 20px 0;
+            font-size: 2.5em;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.1);
+        }
+
+        #status-message {
+            color: #333;
+            margin: 10px 0;
+            font-size: 1.2em;
+            min-height: 24px;
+        }
+
+        #tree-container {
+            position: relative;
+            width: 100%;
+            height: 60vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        #tree {
+            transition: all 0.2s ease-out;
+            width: 200px;
+            height: 300px;
+            transform-origin: bottom center;
+        }
+
+        #volume-meter {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            padding: 15px;
+            background-color: rgba(255, 255, 255, 0.9);
+            border-radius: 8px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+        }
+
+        #volume-bar {
+            width: 150px;
+            height: 20px;
+            background-color: #ddd;
+            border-radius: 10px;
+            overflow: hidden;
+            margin-top: 5px;
+        }
+
+        #volume-fill {
+            height: 100%;
+            width: 0%;
+            background-color: #4CAF50;
+            transition: width 0.1s ease-out;
+        }
+
+        #start-btn {
+            margin: 20px;
+            padding: 12px 24px;
+            font-size: 1.2em;
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 25px;
+            cursor: pointer;
+            transition: all 0.3s;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+        }
+
+        #start-btn:hover {
+            background-color: #45a049;
+            transform: translateY(-2px);
+        }
+
+        #start-btn:disabled {
+            background-color: #cccccc;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        #ground {
+            position: absolute;
+            bottom: 0;
+            width: 100%;
+            height: 100px;
+            background: linear-gradient(to bottom, #654321, #543210);
+        }
+
+        .error {
+            color: #ff0000;
+            margin: 10px 0;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Der Schreiende Baum</h1>
+        <div id="status-message"></div>
+        <button id="start-btn">Start Listening</button>
+        
+        <div id="tree-container">
+            <svg id="tree" viewBox="0 0 100 150" preserveAspectRatio="xMidYMid meet">
+                <!-- Tree trunk -->
+                <path d="M45 150 L45 60 Q50 55 55 60 L55 150" fill="#8B4513"/>
+                <!-- Tree foliage -->
+                <path d="M50 20 Q20 60 30 85 Q10 95 25 120 Q45 130 50 110 Q55 130 75 120 Q90 95 70 85 Q80 60 50 20" fill="#228B22"/>
+            </svg>
+        </div>
+        <div id="ground"></div>
+    </div>
+
+    <div id="volume-meter">
+        Volume Level
+        <div id="volume-bar">
+            <div id="volume-fill"></div>
+        </div>
+    </div>
+
+    <script>
+        const startBtn = document.getElementById('start-btn');
+        const statusMessage = document.getElementById('status-message');
+        const tree = document.getElementById('tree');
+        const volumeFill = document.getElementById('volume-fill');
+        
+        let audioContext = null;
+        let analyser = null;
+        let microphone = null;
+        let animationFrame = null;
+        let isListening = false;
+
+        // Improved audio handling
+        async function initializeAudio() {
+            try {
+                audioContext = new (window.AudioContext || window.webkitAudioContext)();
+                const stream = await navigator.mediaDevices.getUserMedia({ 
+                    audio: { 
+                        echoCancellation: true,
+                        noiseSuppression: true,
+                        autoGainControl: false
+                    } 
+                });
+                
+                microphone = audioContext.createMediaStreamSource(stream);
+                analyser = audioContext.createAnalyser();
+                
+                // Optimize for voice frequency range
+                analyser.fftSize = 1024;
+                analyser.smoothingTimeConstant = 0.2;
+                
+                microphone.connect(analyser);
+                return true;
+            } catch (error) {
+                console.error('Audio initialization error:', error);
+                statusMessage.innerHTML = `Error: ${error.message}. Please ensure microphone access is allowed.`;
+                statusMessage.classList.add('error');
+                return false;
+            }
+        }
+
+        function stopAudio() {
+            if (animationFrame) {
+                cancelAnimationFrame(animationFrame);
+                animationFrame = null;
+            }
+            
+            if (microphone) {
+                microphone.mediaStream.getTracks().forEach(track => track.stop());
+                microphone.disconnect();
+                microphone = null;
+            }
+            
+            if (analyser) {
+                analyser.disconnect();
+                analyser = null;
+            }
+            
+            if (audioContext) {
+                audioContext.close();
+                audioContext = null;
+            }
+
+            // Reset visuals
+            tree.style.transform = 'scale(1)';
+            volumeFill.style.width = '0%';
+            isListening = false;
+            startBtn.textContent = 'Start Listening';
+            statusMessage.textContent = '';
+        }
+
+        function updateTreeSize(volume) {
+            // Smooth scaling based on volume
+            const minScale = 1;
+            const maxScale = 2.5;
+            const scaleFactor = minScale + (volume * (maxScale - minScale));
+            
+            // Apply transforms
+            tree.style.transform = `scale(${scaleFactor})`;
+            volumeFill.style.width = `${volume * 100}%`;
+        }
+
+        function analyzeAudio() {
+            if (!analyser || !isListening) return;
+
+            const dataArray = new Uint8Array(analyser.frequencyBinCount);
+            analyser.getByteFrequencyData(dataArray);
+            
+            // Calculate volume focusing on voice frequencies (approximately 85-255 Hz)
+            const relevantFrequencies = dataArray.slice(2, 6);
+            let volume = relevantFrequencies.reduce((sum, value) => sum + value, 0) / 
+                        (relevantFrequencies.length * 255);
+            
+            // Apply smoothing
+            volume = Math.min(Math.max(volume, 0), 1);
+            
+            updateTreeSize(volume);
+            animationFrame = requestAnimationFrame(analyzeAudio);
+        }
+
+        startBtn.addEventListener('click', async () => {
+            startBtn.disabled = true;
+            
+            if (!isListening) {
+                statusMessage.textContent = 'Initializing microphone...';
+                const success = await initializeAudio();
+                
+                if (success) {
+                    isListening = true;
+                    startBtn.textContent = 'Stop Listening';
+                    statusMessage.textContent = 'Listening! Make some noise to grow the tree.';
+                    statusMessage.classList.remove('error');
+                    analyzeAudio();
+                }
+            } else {
+                stopAudio();
+            }
+            
+            startBtn.disabled = false;
+        });
+
+        // Cleanup on page unload
+        window.addEventListener('beforeunload', stopAudio);
+    </script>
+</body>
+</html>
